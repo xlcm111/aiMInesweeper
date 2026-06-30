@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫雷 — Minesweeper</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body class="dark-mode">
+
+    <!-- 背景粒子 -->
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="game-wrapper">
+
+        <!-- 标题 -->
+        <div class="header">
+            <h1 class="title">💣 扫 雷</h1>
+            <p class="subtitle">MINESWEEPER</p>
+        </div>
+
+        <!-- 难度选择 -->
+        <div class="difficulty-bar">
+            <button class="diff-btn active" data-level="beginner">
+                <span class="diff-icon">🌱</span>
+                <span class="diff-label">初级</span>
+                <span class="diff-desc">9×9 · 10 雷</span>
+            </button>
+            <button class="diff-btn" data-level="intermediate">
+                <span class="diff-icon">⚡</span>
+                <span class="diff-label">中级</span>
+                <span class="diff-desc">16×16 · 40 雷</span>
+            </button>
+            <button class="diff-btn" data-level="expert">
+                <span class="diff-icon">💀</span>
+                <span class="diff-label">高级</span>
+                <span class="diff-desc">30×16 · 99 雷</span>
+            </button>
+        </div>
+
+        <!-- ==================== -->
+        <!-- 模式切换             -->
+        <!-- ==================== -->
+        <div class="mode-bar">
+            <button class="mode-btn active" data-mode="classic">
+                <span>🎮</span> 经典模式
+            </button>
+            <button class="mode-btn" data-mode="vs">
+                <span>🤖</span> 人机对战
+            </button>
+            <button class="mode-btn" data-mode="multiplayer">
+                <span>👥</span> 多人对战
+            </button>
+        </div>
+
+        <!-- 游戏主体 - 经典模式 -->
+        <div class="game" id="game-classic">
+
+            <!-- 工具栏 -->
+            <div class="toolbar">
+                <div class="led-display" id="mine-count">
+                    <span class="led-icon">💣</span>
+                    <span class="led-value">010</span>
+                </div>
+
+                <button id="restart" class="face-btn">😊</button>
+
+                <div class="led-display" id="timer">
+                    <span class="led-icon">⏱</span>
+                    <span class="led-value">000</span>
+                </div>
+            </div>
+
+            <!-- 棋盘 -->
+            <div id="board"></div>
+
+        </div>
+
+        <!-- 游戏主体 - 人机对战模式 -->
+        <div class="vs-container" id="game-vs" style="display:none;">
+
+            <!-- 左侧：玩家 -->
+            <div class="vs-side vs-human">
+                <div class="vs-label">🧑 你</div>
+                <div class="game vs-game-panel">
+                    <div class="toolbar">
+                        <div class="led-display" id="vs-mine-count">
+                            <span class="led-icon">💣</span>
+                            <span class="led-value">010</span>
+                        </div>
+                        <button id="vs-restart" class="face-btn">😊</button>
+                        <div class="led-display" id="vs-timer">
+                            <span class="led-icon">⏱</span>
+                            <span class="led-value">000</span>
+                        </div>
+                    </div>
+                    <div id="vs-board-human" class="vs-board"></div>
+                </div>
+            </div>
+
+            <!-- 中间状态栏 -->
+            <div class="vs-center">
+                <div class="vs-score">
+                    <div class="vs-score-item">
+                        <span class="vs-score-label">🧑 你</span>
+                        <span class="vs-score-value" id="vs-human-wins">0</span>
+                    </div>
+                    <div class="vs-score-vs">VS</div>
+                    <div class="vs-score-item">
+                        <span class="vs-score-label">🤖 AI</span>
+                        <span class="vs-score-value" id="vs-ai-wins">0</span>
+                    </div>
+                </div>
+
+                <!-- AI 难度选择 -->
+                <div class="vs-ai-difficulty">
+                    <span class="vs-ai-diff-label">AI 难度</span>
+                    <div class="vs-ai-diff-btns">
+                        <button class="ai-diff-btn" data-ai="easy" title="慢速 + 偶尔犯错">🌱 初级</button>
+                        <button class="ai-diff-btn active" data-ai="medium" title="标准逻辑推理">⚡ 中级</button>
+                        <button class="ai-diff-btn" data-ai="hard" title="快速 + 概率判断">💀 高级</button>
+                        <button class="ai-diff-btn" data-ai="expert" title="极速 + 模式识别">👾 专家</button>
+                    </div>
+                </div>
+
+                <div class="vs-status" id="vs-status">等待开始...</div>
+                <button id="vs-start-btn" class="vs-start-btn">🚀 开始对战</button>
+            </div>
+
+            <!-- 右侧：AI -->
+            <div class="vs-side vs-ai">
+                <div class="vs-label">🤖 AI</div>
+                <div class="game vs-game-panel">
+                    <div class="toolbar">
+                        <div class="led-display" id="vs-ai-mine-count">
+                            <span class="led-icon">💣</span>
+                            <span class="led-value">010</span>
+                        </div>
+                        <div class="face-btn" id="vs-ai-face">🤖</div>
+                        <div class="led-display" id="vs-ai-timer">
+                            <span class="led-icon">⏱</span>
+                            <span class="led-value">000</span>
+                        </div>
+                    </div>
+                    <div id="vs-board-ai" class="vs-board"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 游戏主体 - 多人对战模式 -->
+        <div class="multi-container" id="game-multi" style="display:none;">
+
+            <!-- 大厅视图 -->
+            <div id="multi-lobby" class="multi-lobby">
+                <div class="multi-lobby-section">
+                    <h3>🏠 创建房间</h3>
+                    <p class="multi-hint">创建一个新房间，分享房间码给好友</p>
+                    <button id="multi-create-btn" class="multi-action-btn">创建房间</button>
+                    <div id="multi-created-info" class="multi-created-info" style="display:none;">
+                        <div class="multi-room-code-label">房间码</div>
+                        <div class="multi-room-code" id="multi-room-code-display">------</div>
+                        <button id="multi-copy-code" class="multi-small-btn">📋 复制</button>
+                        <span id="multi-copy-ok" class="multi-copy-ok" style="display:none;">✅ 已复制</span>
+                    </div>
+                </div>
+                <div class="multi-lobby-divider"><span>或</span></div>
+                <div class="multi-lobby-section">
+                    <h3>🔗 加入房间</h3>
+                    <p class="multi-hint">输入好友分享的房间码</p>
+                    <div class="multi-join-row">
+                        <input type="text" id="multi-room-input" class="multi-room-input"
+                               placeholder="输入房间码" maxlength="6" autocomplete="off">
+                        <button id="multi-join-btn" class="multi-action-btn">加入</button>
+                    </div>
+                    <div id="multi-join-msg" class="multi-msg"></div>
+                </div>
+                <div class="multi-lobby-divider"></div>
+                <div class="multi-lobby-section">
+                    <h3>🌐 服务器连接</h3>
+                    <div class="multi-server-row">
+                        <input type="text" id="multi-server-url" class="multi-server-input"
+                               placeholder="自动检测（当前页面地址）">
+                        <span id="multi-conn-status" class="multi-conn-status disconnected">● 未连接</span>
+                    </div>
+                    <button id="multi-connect-btn" class="multi-small-btn">连接</button>
+                </div>
+            </div>
+
+            <!-- 等待室视图 -->
+            <div id="multi-room" class="multi-room" style="display:none;">
+                <div class="multi-room-header">
+                    <span class="multi-room-title">房间: <strong id="multi-room-code-label">------</strong></span>
+                    <span class="multi-room-count">玩家: <strong id="multi-player-count">1</strong>/4</span>
+                </div>
+                <div class="difficulty-bar" id="multi-diff-bar">
+                    <button class="diff-btn active" data-level="beginner">
+                        <span class="diff-icon">🌱</span>
+                        <span class="diff-label">初级</span>
+                        <span class="diff-desc">9×9 · 10 雷</span>
+                    </button>
+                    <button class="diff-btn" data-level="intermediate">
+                        <span class="diff-icon">⚡</span>
+                        <span class="diff-label">中级</span>
+                        <span class="diff-desc">16×16 · 40 雷</span>
+                    </button>
+                    <button class="diff-btn" data-level="expert">
+                        <span class="diff-icon">💀</span>
+                        <span class="diff-label">高级</span>
+                        <span class="diff-desc">30×16 · 99 雷</span>
+                    </button>
+                </div>
+                <div class="multi-player-list" id="multi-player-list">
+                    <!-- 动态填充 -->
+                </div>
+                <div class="multi-room-actions">
+                    <button id="multi-start-btn" class="multi-action-btn primary" disabled>🚀 开始游戏 (需要至少2人)</button>
+                    <button id="multi-leave-btn" class="multi-action-btn danger">离开房间</button>
+                </div>
+                <div id="multi-room-msg" class="multi-msg"></div>
+            </div>
+
+            <!-- 游戏视图 -->
+            <div id="multi-game" class="multi-game" style="display:none;">
+                <div class="multi-game-layout">
+                    <!-- 左侧：自己的棋盘 -->
+                    <div class="multi-own-board">
+                        <div class="vs-label multi-own-label">🧑 你</div>
+                        <div class="game vs-game-panel">
+                            <div class="toolbar">
+                                <div class="led-display" id="multi-mine-count">
+                                    <span class="led-icon">💣</span>
+                                    <span class="led-value">010</span>
+                                </div>
+                                <div class="face-btn" id="multi-face">😊</div>
+                                <div class="led-display" id="multi-timer">
+                                    <span class="led-icon">⏱</span>
+                                    <span class="led-value">000</span>
+                                </div>
+                            </div>
+                            <div id="multi-board-self" class="vs-board"></div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：对手面板 -->
+                    <div class="multi-opponents">
+                        <div class="multi-opponents-title">👥 其他玩家</div>
+                        <div id="multi-opponents-list" class="multi-opponents-list">
+                            <!-- 对手卡片 -->
+                        </div>
+                        <div class="multi-ranking" id="multi-ranking" style="display:none;">
+                            <div class="multi-ranking-title">🏆 最终排名</div>
+                            <div id="multi-ranking-list"></div>
+                        </div>
+                        <button id="multi-play-again" class="multi-action-btn primary" style="display:none;">🔄 再来一局</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Toast 通知 -->
+        <div id="multi-toast" class="multi-toast" style="display:none;"></div>
+
+        <!-- 底部信息 -->
+        <div class="footer">
+            <p class="footer-hint">
+                <kbd>🖱 左键</kbd> 翻开 &nbsp;·&nbsp;
+                <kbd>🖱 右键</kbd> 插旗 &nbsp;·&nbsp;
+                <kbd>😊</kbd> 重新开始
+                <span class="footer-touch-hint">&nbsp;·&nbsp; 📱 长按插旗</span>
+            </p>
+        </div>
+
+    </div>
+
+    <!-- ==================== -->
+    <!-- 右侧浮动按钮 Dock     -->
+    <!-- ==================== -->
+
+    <div class="float-dock">
+        <button id="settings-toggle" class="float-dock-btn" title="设置">⚙️</button>
+        <button id="leaderboard-toggle" class="float-dock-btn" title="排行榜">🏆</button>
+        <button id="friends-toggle" class="float-dock-btn" title="好友">👥</button>
+        <button id="user-toggle" class="float-dock-btn" title="用户">👤</button>
+    </div>
+
+    <!-- 用户面板遮罩 -->
+    <div id="auth-overlay" class="auth-overlay"></div>
+
+    <!-- 用户面板 -->
+    <div id="auth-panel" class="auth-panel">
+
+        <!-- 未登录视图 -->
+        <div id="auth-view-login" class="auth-view">
+            <div class="auth-header">
+                <h2 id="auth-title">🔐 登 录</h2>
+                <button id="auth-close" class="auth-close-btn">&times;</button>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">登 录</button>
+                <button class="auth-tab" data-tab="register">注 册</button>
+            </div>
+
+            <!-- 登录表单 -->
+            <form id="login-form" class="auth-form active">
+                <div class="auth-field">
+                    <label>👤 用户名</label>
+                    <input type="text" id="login-username" placeholder="请输入用户名" autocomplete="username" maxlength="20">
+                </div>
+                <div class="auth-field">
+                    <label>🔒 密码</label>
+                    <input type="password" id="login-password" placeholder="请输入密码" autocomplete="current-password" maxlength="30">
+                </div>
+                <div class="auth-field auth-field-check">
+                    <label class="auth-check-label">
+                        <input type="checkbox" id="login-remember">
+                        <span>记住我</span>
+                    </label>
+                </div>
+                <div id="login-msg" class="auth-msg"></div>
+                <button type="submit" class="auth-submit-btn">登 录</button>
+            </form>
+
+            <!-- 注册表单 -->
+            <form id="register-form" class="auth-form">
+                <div class="auth-field">
+                    <label>👤 用户名</label>
+                    <input type="text" id="reg-username" placeholder="4-20位字母/数字/下划线" autocomplete="off" maxlength="20">
+                </div>
+                <div class="auth-field">
+                    <label>🔒 密码</label>
+                    <input type="password" id="reg-password" placeholder="至少6位" autocomplete="new-password" maxlength="30">
+                </div>
+                <div class="auth-field">
+                    <label>🔒 确认密码</label>
+                    <input type="password" id="reg-password2" placeholder="再次输入密码" autocomplete="new-password" maxlength="30">
+                </div>
+                <div id="reg-msg" class="auth-msg"></div>
+                <button type="submit" class="auth-submit-btn">注 册</button>
+            </form>
+        </div>
+
+        <!-- 已登录视图 -->
+        <div id="auth-view-profile" class="auth-view" style="display:none;">
+            <div class="auth-header">
+                <h2>👤 个人中心</h2>
+                <button id="auth-close2" class="auth-close-btn">&times;</button>
+            </div>
+
+            <div class="profile-info">
+                <div class="profile-avatar" id="profile-avatar">?</div>
+                <div class="profile-username" id="profile-username"></div>
+                <div class="profile-join-date" id="profile-join-date"></div>
+                <div class="profile-level" id="profile-level"></div>
+            </div>
+
+            <div class="auth-divider"></div>
+
+            <div class="profile-stats">
+                <h3>📊 游戏总览</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-icon">🎮</span>
+                        <span class="stat-value" id="stat-games">0</span>
+                        <span class="stat-label">总局数</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">🏆</span>
+                        <span class="stat-value" id="stat-wins">0</span>
+                        <span class="stat-label">胜 利</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">💀</span>
+                        <span class="stat-value" id="stat-losses">0</span>
+                        <span class="stat-label">失 败</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">📈</span>
+                        <span class="stat-value" id="stat-winrate">-</span>
+                        <span class="stat-label">胜 率</span>
+                    </div>
+                </div>
+                <!-- 胜率进度条 -->
+                <div class="winrate-bar-wrap">
+                    <div class="winrate-bar">
+                        <div class="winrate-fill" id="winrate-fill" style="width:0%"></div>
+                    </div>
+                    <div class="winrate-labels">
+                        <span>0%</span>
+                        <span>50%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+                <!-- 总游戏时长 -->
+                <div class="total-time" id="total-time"></div>
+            </div>
+
+            <div class="auth-divider"></div>
+
+            <div class="profile-stats">
+                <h3>⏱ 最佳成绩</h3>
+                <div class="best-times" id="best-times">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+
+            <div class="auth-divider"></div>
+
+            <div class="profile-stats">
+                <h3>🕒 最近对局</h3>
+                <div class="game-history" id="game-history">
+                    <!-- 动态填充 -->
+                </div>
+                <div class="game-history-empty" id="game-history-empty">暂无对局记录</div>
+            </div>
+
+            <div class="auth-divider"></div>
+
+            <div class="profile-actions">
+                <button id="edit-profile-btn" class="auth-submit-btn edit-profile-btn">✏️ 编辑资料</button>
+                <button id="logout-btn" class="auth-submit-btn logout-btn">🚪 退出登录</button>
+                <button id="switch-account-btn" class="auth-submit-btn switch-account-btn">🔄 切换账号</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== -->
+    <!-- 排行榜面板            -->
+    <!-- ==================== -->
+
+    <!-- 排行榜面板遮罩 -->
+    <div id="leaderboard-overlay" class="leaderboard-overlay"></div>
+
+    <!-- 排行榜面板 -->
+    <div id="leaderboard-panel" class="leaderboard-panel">
+        <div class="settings-header">
+            <h2>🏆 排行榜</h2>
+            <button id="leaderboard-close" class="settings-close-btn">&times;</button>
+        </div>
+        <div class="leaderboard-tabs">
+            <button class="lb-tab active" data-lb="winrate">🏅 胜率榜</button>
+            <button class="lb-tab" data-lb="wins">🎯 胜场榜</button>
+            <button class="lb-tab" data-lb="beginner">🌱 初级最快</button>
+            <button class="lb-tab" data-lb="intermediate">⚡ 中级最快</button>
+            <button class="lb-tab" data-lb="expert">💀 高级最快</button>
+        </div>
+        <div class="leaderboard-body">
+            <div class="lb-empty" id="lb-empty">暂无用户数据</div>
+            <div class="lb-list" id="lb-list">
+                <!-- 动态填充 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== -->
+    <!-- 设置面板              -->
+    <!-- ==================== -->
+
+    <!-- 设置面板遮罩 -->
+    <div id="settings-overlay" class="settings-overlay"></div>
+
+    <!-- 设置面板 -->
+    <div id="settings-panel" class="settings-panel">
+        <div class="settings-header">
+            <h2>⚙️ 设 置</h2>
+            <button id="settings-close" class="settings-close-btn">&times;</button>
+        </div>
+
+        <div class="settings-body">
+
+            <!-- ===== 音频 ===== -->
+            <div class="settings-section-title">🔊 音 频</div>
+
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <span class="settings-icon">🔈</span>
+                    <div>
+                        <div class="settings-label">音量</div>
+                        <div class="settings-hint">拖动滑块调节音效大小</div>
+                    </div>
+                </div>
+                <div class="settings-slider-wrap">
+                    <input type="range" id="setting-volume" class="settings-slider" min="0" max="100" value="30">
+                    <span class="settings-slider-val" id="volume-val">30%</span>
+                </div>
+            </div>
+
+            <!-- ===== 显示 ===== -->
+            <div class="settings-section-title">✨ 显 示</div>
+
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <span class="settings-icon">✨</span>
+                    <div>
+                        <div class="settings-label">粒子背景</div>
+                        <div class="settings-hint">背景浮动粒子动画</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-particles" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <span class="settings-icon">🎬</span>
+                    <div>
+                        <div class="settings-label">点击动画</div>
+                        <div class="settings-hint">翻开和爆炸动画效果</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-animations" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <!-- ===== 主题 ===== -->
+            <div class="settings-section-title">🎨 主 题</div>
+
+            <div class="theme-grid" id="theme-grid">
+                <button class="theme-btn active" data-theme="night" title="深邃夜空">
+                    <span class="theme-swatch night"></span>
+                    <span class="theme-name">深邃夜空</span>
+                </button>
+                <button class="theme-btn" data-theme="classic" title="经典 Win98">
+                    <span class="theme-swatch classic"></span>
+                    <span class="theme-name">经典 Win98</span>
+                </button>
+                <button class="theme-btn" data-theme="neon" title="霓虹都市">
+                    <span class="theme-swatch neon"></span>
+                    <span class="theme-name">霓虹都市</span>
+                </button>
+                <button class="theme-btn" data-theme="forest" title="翡翠森林">
+                    <span class="theme-swatch forest"></span>
+                    <span class="theme-name">翡翠森林</span>
+                </button>
+                <button class="theme-btn" data-theme="ocean" title="海洋之心">
+                    <span class="theme-swatch ocean"></span>
+                    <span class="theme-name">海洋之心</span>
+                </button>
+                <button class="theme-btn" data-theme="sunset" title="日落暖阳">
+                    <span class="theme-swatch sunset"></span>
+                    <span class="theme-name">日落暖阳</span>
+                </button>
+            </div>
+
+            <!-- ===== 游戏 ===== -->
+            <div class="settings-section-title">🎮 游 戏</div>
+
+            <div class="settings-item">
+                <div class="settings-item-left">
+                    <span class="settings-icon">🛠️</span>
+                    <div>
+                        <div class="settings-label">自定义难度</div>
+                        <div class="settings-hint">自定义棋盘大小和雷数</div>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-custom" >
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <!-- 自定义难度参数 (折叠) -->
+            <div id="custom-difficulty-fields" class="custom-fields collapsed">
+                <div class="custom-field">
+                    <label>行数 <span>(5–30)</span></label>
+                    <input type="number" id="custom-rows" min="5" max="30" value="9">
+                </div>
+                <div class="custom-field">
+                    <label>列数 <span>(5–40)</span></label>
+                    <input type="number" id="custom-cols" min="5" max="40" value="9">
+                </div>
+                <div class="custom-field">
+                    <label>雷数 <span>(1–<em id="max-mines-hint">10</em>)</span></label>
+                    <input type="number" id="custom-mines" min="1" max="10" value="10">
+                </div>
+                <button id="apply-custom" class="apply-btn">✅ 应用自定义</button>
+            </div>
+
+            <!-- ===== 其他 ===== -->
+            <div class="settings-section-title">ℹ️ 其 他</div>
+
+            <div class="settings-about">
+                <div class="settings-about-line">扫雷 Minesweeper v2.0</div>
+                <div class="settings-about-line">经典 · 人机 · 多人对战</div>
+            </div>
+
+            <button id="settings-reset" class="settings-reset-btn">🔄 恢复默认设置</button>
+
+        </div>
+    </div>
+
+    <!-- ==================== -->
+    <!-- 好友面板              -->
+    <!-- ==================== -->
+
+    <!-- 好友面板遮罩 -->
+    <div id="friends-overlay" class="friends-overlay"></div>
+
+    <!-- 好友面板 -->
+    <div id="friends-panel" class="friends-panel">
+        <div class="settings-header">
+            <h2>👥 好 友</h2>
+            <button id="friends-close" class="settings-close-btn">&times;</button>
+        </div>
+
+        <div class="settings-body">
+
+            <!-- 添加好友 -->
+            <div class="friends-add-row">
+                <input type="text" id="friends-search-input" class="friends-search-input"
+                       placeholder="输入对方用户名" maxlength="20" autocomplete="off">
+                <button id="friends-add-btn" class="multi-small-btn">➕ 添加</button>
+            </div>
+            <div id="friends-add-msg" class="auth-msg"></div>
+
+            <!-- 收到的好友请求 -->
+            <div id="friends-requests-section" style="display:none;">
+                <div class="settings-section-title">📩 好友请求</div>
+                <div id="friends-requests-list" class="friends-list"></div>
+                <div class="settings-divider"></div>
+            </div>
+
+            <!-- 好友列表 -->
+            <div class="settings-section-title">👥 我的好友</div>
+            <div id="friends-list" class="friends-list">
+                <div class="friends-empty" id="friends-empty">还没有好友，去添加吧 ✨</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== -->
+    <!-- 编辑资料弹窗          -->
+    <!-- ==================== -->
+
+    <!-- 编辑资料遮罩 -->
+    <div id="edit-profile-overlay" class="edit-profile-overlay"></div>
+
+    <!-- 编辑资料面板 -->
+    <div id="edit-profile-panel" class="edit-profile-panel">
+        <div class="settings-header">
+            <h2>✏️ 编辑资料</h2>
+            <button id="edit-profile-close" class="settings-close-btn">&times;</button>
+        </div>
+
+        <div class="settings-body">
+            <div class="profile-edit-field">
+                <label>📝 昵称</label>
+                <input type="text" id="profile-nickname-input" class="profile-nickname-input"
+                       placeholder="输入昵称（最多12字）" maxlength="12" autocomplete="off">
+            </div>
+            <div class="profile-edit-field">
+                <label>🎨 头像</label>
+                <div class="avatar-picker" id="avatar-picker">
+                    <!-- JS 动态填充 emoji 选项 -->
+                </div>
+            </div>
+
+            <div id="edit-profile-msg" class="auth-msg"></div>
+
+            <div class="edit-profile-buttons">
+                <button id="edit-profile-cancel" class="auth-submit-btn edit-cancel-btn">取 消</button>
+                <button id="edit-profile-save" class="auth-submit-btn">💾 保 存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== -->
+    <!-- 黑夜/白天切换按钮     -->
+    <!-- ==================== -->
+    <button id="theme-toggle" class="theme-toggle-btn" title="切换白天/黑夜模式">☀️</button>
+
+</body>
+
+</html>

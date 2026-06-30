@@ -1,0 +1,11 @@
+{
+  "name": "minesweeper-multiplayer",
+  "version": "1.0.0",
+  "description": "扫雷多人对战服务器",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "xlcm1": {
+    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+    "createdAt": "2026-06-30T11:19:27.924Z",
+    "nickname": "xlcm1",
+    "avatar": "👤",
+    "stats": {
+      "games": 0,
+      "wins": 0,
+      "losses": 0,
+      "totalSeconds": 0,
+      "history": [],
+      "bestTimes": {
+        "beginner": null,
+        "intermediate": null,
+        "expert": null
+      }
+    },
+    "friends": [],
+    "friendRequestsSent": [],
+    "friendRequestsReceived": []
+  },
+  "xlcm2": {
+    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+    "createdAt": "2026-06-30T11:37:47.286Z",
+    "nickname": "xlcm2",
+    "avatar": "👤",
+    "stats": {
+      "games": 0,
+      "wins": 0,
+      "losses": 0,
+      "totalSeconds": 0,
+      "history": [],
+      "bestTimes": {
+        "beginner": null,
+        "intermediate": null,
+        "expert": null
+      }
+    },
+    "friends": [],
+    "friendRequestsSent": [],
+    "friendRequestsReceived": []
+  }
+}
